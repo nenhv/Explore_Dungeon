@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Player))]
 [DisallowMultipleComponent]
@@ -12,6 +13,14 @@ public class PlayerControl : MonoBehaviour
     [SerializeField] private MovementDetailsSO movementDetails;
 
     private Player player;
+    // Component tìm mục tiêu gần nhất.
+    private AutoAimTargeting autoAimTargeting;
+
+    // Có mục tiêu hợp lệ khi đang giữ FIRE hay không.
+    private bool hasMobileTarget = false;
+
+    // Lưu hướng bắn cuối cùng trên mobile.
+    private Vector2 lastMobileAimDirection = Vector2.right;
     private bool leftMouseDownPreviousFrame = false;
     private int currentWeaponIndex = 1;
     private float moveSpeed;
@@ -27,7 +36,8 @@ public class PlayerControl : MonoBehaviour
 
     private void Awake(){
         player = GetComponent<Player>();
-
+        autoAimTargeting =
+        GetComponent<AutoAimTargeting>();
         moveSpeed = movementDetails.GetMoveSpeed();
     }
 
@@ -54,11 +64,15 @@ public class PlayerControl : MonoBehaviour
         player.animator.speed = moveSpeed / Settings.baseSpeedForPlayerAnimation;
     }
 
-    private void Update() {
-
-        if (isPlayerMovementDisabled) return;
-
-        if (isPlayerRolling) return;
+    private void Update()
+    {
+        if (isPlayerMovementDisabled || isPlayerRolling)
+        {
+            fireTime = 0f;
+            leftMouseDownPreviousFrame = false;
+            hasMobileTarget = false;
+            return;
+        }
 
         MovementInput();
 
@@ -175,48 +189,173 @@ public class PlayerControl : MonoBehaviour
         ReloadWeaponInput();
     }
 
-    private void AimWeaponInput(out Vector3 weaponDirection, out float weaponAngleDegrees, out float playerAngleDegrees, out AimDirection playerAimDirection){
-        Vector3 mouseWorldPosition = HelperUtilities.GetMouseWorldPosition();
+    
+    private void AimWeaponInput(
+        out Vector3 weaponDirection,
+        out float weaponAngleDegrees,
+        out float playerAngleDegrees,
+        out AimDirection playerAimDirection)
+    {
+        hasMobileTarget = false;
 
-        weaponDirection = (mouseWorldPosition - player.activeWeapon.GetShootPosition());
+        MobileFireButton fireButton =
+            MobileFireButton.Instance;
 
-        Vector3 playerDirection = (mouseWorldPosition - transform.position);
+        bool fireButtonHeld =
+            fireButton != null && fireButton.IsPressed;
 
-        weaponAngleDegrees = HelperUtilities.GetAngleFromVector(weaponDirection);
+        Vector3 aimTargetPosition;
 
-        playerAngleDegrees = HelperUtilities.GetAngleFromVector(playerDirection);
+        // 1. Nguoi choi dang giu nut FIRE.
+        if (fireButtonHeld)
+        {
+            Vector3 enemyTargetPosition = Vector3.zero;
 
-        playerAimDirection = HelperUtilities.GetAimDirection(playerAngleDegrees);
+            bool foundEnemy =
+                autoAimTargeting != null &&
+                autoAimTargeting.TryGetTarget(
+                    out enemyTargetPosition
+                );
 
-        player.aimWeaponEvent.CallAimWeaponEvent(playerAimDirection, playerAngleDegrees, weaponAngleDegrees, weaponDirection);
-    } 
+            if (foundEnemy)
+            {
+                hasMobileTarget = true;
 
-    private void FireWeaponInput(Vector3 weaponDirection, float weaponAngleDegrees, float playerAngleDegrees, AimDirection playerAimDirection){
-        // Tạm thời tắt bắn bằng chuột giả lập trên Android.
-        // Module 3 sẽ kết nối input bắn cảm ứng riêng.
-        #if UNITY_ANDROID && !UNITY_EDITOR
-            fireTime = 0f;
-            leftMouseDownPreviousFrame = false;
-            return;
-        #endif
+                aimTargetPosition = enemyTargetPosition;
 
-        // Trong Editor, click kéo joystick không được tính là bắn.
-        if (MobileJoystick.Instance != null &&
-            MobileJoystick.Instance.IsPressed)
+                // Luu huong ngam cuoi cung.
+                Vector3 directionToEnemy =
+                    aimTargetPosition - transform.position;
+
+                if (directionToEnemy.sqrMagnitude > 0.0001f)
+                {
+                    lastMobileAimDirection =
+                        ((Vector2)directionToEnemy).normalized;
+                }
+            }
+            else
+            {
+                // Khong co Enemy -> giu huong cu.
+                aimTargetPosition =
+                    transform.position +
+                    (Vector3)lastMobileAimDirection * 100f;
+            }
+        }
+        // 2. Tren Android, khong ngam bang toa do cham.
+        else if (Application.isMobilePlatform)
+        {
+            aimTargetPosition =
+                transform.position +
+                (Vector3)lastMobileAimDirection * 100f;
+        }
+        // 3. Tren PC, giu nguyen co che ngam chuot.
+        else
+        {
+            aimTargetPosition =
+                HelperUtilities.GetMouseWorldPosition();
+        }
+
+        // 4. Tinh vector tu nong sung den muc tieu.
+        weaponDirection =
+            aimTargetPosition -
+            player.activeWeapon.GetShootPosition();
+
+        // 5. Tinh vector tu Player den muc tieu.
+        Vector3 playerDirection =
+            aimTargetPosition - transform.position;
+
+        // 6. Tinh cac goc ngam.
+        weaponAngleDegrees =
+            HelperUtilities.GetAngleFromVector(
+                weaponDirection
+            );
+
+        playerAngleDegrees =
+            HelperUtilities.GetAngleFromVector(
+                playerDirection
+            );
+
+        // 7. Xac dinh huong cho animation.
+        playerAimDirection =
+            HelperUtilities.GetAimDirection(
+                playerAngleDegrees
+            );
+
+        // 8. Goi event ngam sung co san.
+        player.aimWeaponEvent.CallAimWeaponEvent(
+            playerAimDirection,
+            playerAngleDegrees,
+            weaponAngleDegrees,
+            weaponDirection
+        );
+    }
+ 
+    private void FireWeaponInput(
+        Vector3 weaponDirection,
+        float weaponAngleDegrees,
+        float playerAngleDegrees,
+        AimDirection playerAimDirection)
+    {
+        MobileFireButton fireButton =
+            MobileFireButton.Instance;
+
+        MobileJoystick moveJoystick =
+            MobileJoystick.Instance;
+
+        bool fireButtonHeld =
+            fireButton != null && fireButton.IsPressed;
+
+        // Chi ban bang FIRE khi tim thay Enemy hop le.
+        bool fireFromMobile =
+            fireButtonHeld && hasMobileTarget;
+
+        bool fireFromMouse = false;
+
+        // PC van co the ban bang chuot nhu truoc.
+        if (!Application.isMobilePlatform)
+        {
+            bool movingByJoystick =
+                moveJoystick != null &&
+                moveJoystick.IsPressed;
+
+            bool mouseOverUI =
+                EventSystem.current != null &&
+                EventSystem.current.IsPointerOverGameObject();
+
+            // Khong de click UI bien thanh lenh ban PC.
+            fireFromMouse =
+                Input.GetMouseButton(0) &&
+                !movingByJoystick &&
+                !fireButtonHeld &&
+                !mouseOverUI;
+        }
+
+        bool shouldFire =
+            fireFromMobile || fireFromMouse;
+
+        if (shouldFire)
+        {
+            fireTime += Time.deltaTime;
+
+            player.fireWeaponEvent.CallFireWeaponEvent(
+                true,
+                leftMouseDownPreviousFrame,
+                playerAimDirection,
+                playerAngleDegrees,
+                weaponAngleDegrees,
+                weaponDirection,
+                fireTime
+            );
+
+            leftMouseDownPreviousFrame = true;
+        }
+        else
         {
             fireTime = 0f;
             leftMouseDownPreviousFrame = false;
-            return;
-        }
-        if(Input.GetMouseButton(0)){
-            fireTime += Time.deltaTime;
-            player.fireWeaponEvent.CallFireWeaponEvent(true, leftMouseDownPreviousFrame , playerAimDirection, playerAngleDegrees, weaponAngleDegrees, weaponDirection, fireTime);
-            leftMouseDownPreviousFrame = true;
-        } else {
-            fireTime = 0;
-            leftMouseDownPreviousFrame = false;
         }
     }
+
 
     private void SwitchWeaponInput(){
         if (Input.mouseScrollDelta.y < 0f){

@@ -13,6 +13,7 @@ public class Health : MonoBehaviour
     [SerializeField] private HealthBar healthBar;
     private int startingHealth;
     private int currentHealth;
+    public bool IsAlive => currentHealth > 0;
     private HealthEvent healthEvent;
     private Player player;
     private Coroutine immunityCoroutine;

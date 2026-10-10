@@ -19,7 +19,7 @@ public class MovementByVelocity : MonoBehaviour
         movementByVelocityEvent.OnMovementByVelocity += MovementByVelocityEvent_OnMovementByVelocity;
     }
 
-    private void Disable(){
+    private void OnDisable(){
         movementByVelocityEvent.OnMovementByVelocity -= MovementByVelocityEvent_OnMovementByVelocity;
     }
 

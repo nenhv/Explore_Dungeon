@@ -69,32 +69,62 @@ public class PlayerControl : MonoBehaviour
         PlayerRollCooldownTimer();
     }
 
-    private void MovementInput(){
-        float horizontalMovement = Input.GetAxisRaw("Horizontal");
-        float verticalMovement = Input.GetAxisRaw("Vertical");
+    
+    private void MovementInput()
+    {
+        Vector2 direction = Vector2.zero;
+
         bool rightMouseButtonDown = Input.GetMouseButtonDown(1);
 
-        Vector2 direction = new Vector2(horizontalMovement, verticalMovement);
+        // 1. Lấy dữ liệu từ joystick đang hoạt động.
+        MobileJoystick joystick = MobileJoystick.Instance;
 
-        if (horizontalMovement != 0f && verticalMovement != 0f){
-            direction *= 0.7f;
+        if (joystick != null && joystick.IsPressed)
+        {
+            // Đang điều khiển bằng joystick.
+            direction = joystick.Direction;
+
+            // Không dùng chuột phải để Roll trong lúc kéo joystick.
+            rightMouseButtonDown = false;
+        }
+        else
+        {
+            // Không sử dụng joystick -> giữ điều khiển PC.
+            float horizontalMovement = Input.GetAxisRaw("Horizontal");
+            float verticalMovement = Input.GetAxisRaw("Vertical");
+
+            direction = new Vector2(
+                horizontalMovement,
+                verticalMovement
+            );
+
+            // Tránh đi chéo nhanh hơn đi thẳng.
+            direction = Vector2.ClampMagnitude(direction, 1f);
         }
 
-        // If there is movement either move or roll
-        if (direction != Vector2.zero){
-
-            // move
-            if (!rightMouseButtonDown){
-                player.movementByVelocityEvent.CallMovementByVelocityEvent(direction, moveSpeed);
+        // 2. Kiểm tra có yêu cầu di chuyển không.
+        if (direction.sqrMagnitude > 0.0001f)
+        {
+            // 3. Di chuyển bình thường.
+            if (!rightMouseButtonDown)
+            {
+                player.movementByVelocityEvent
+                    .CallMovementByVelocityEvent(
+                        direction,
+                        moveSpeed
+                    );
             }
-            else if(playerRollCooldownTimer <= 0f){
-                PlayerRoll((Vector3) direction);
+            // 4. Giữ lại cơ chế Roll của PC.
+            else if (playerRollCooldownTimer <= 0f)
+            {
+                PlayerRoll((Vector3)direction);
             }
-
-        } else {
+        }
+        else
+        {
+            // 5. Không có input -> đứng yên.
             player.idleEvent.CallIdleEvent();
         }
-
     }
 
     private void PlayerRoll(Vector3 direction){
@@ -162,6 +192,22 @@ public class PlayerControl : MonoBehaviour
     } 
 
     private void FireWeaponInput(Vector3 weaponDirection, float weaponAngleDegrees, float playerAngleDegrees, AimDirection playerAimDirection){
+        // Tạm thời tắt bắn bằng chuột giả lập trên Android.
+        // Module 3 sẽ kết nối input bắn cảm ứng riêng.
+        #if UNITY_ANDROID && !UNITY_EDITOR
+            fireTime = 0f;
+            leftMouseDownPreviousFrame = false;
+            return;
+        #endif
+
+        // Trong Editor, click kéo joystick không được tính là bắn.
+        if (MobileJoystick.Instance != null &&
+            MobileJoystick.Instance.IsPressed)
+        {
+            fireTime = 0f;
+            leftMouseDownPreviousFrame = false;
+            return;
+        }
         if(Input.GetMouseButton(0)){
             fireTime += Time.deltaTime;
             player.fireWeaponEvent.CallFireWeaponEvent(true, leftMouseDownPreviousFrame , playerAimDirection, playerAngleDegrees, weaponAngleDegrees, weaponDirection, fireTime);

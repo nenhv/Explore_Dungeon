@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 public class MobilePauseHUDVisibility : MonoBehaviour
@@ -14,10 +13,13 @@ public class MobilePauseHUDVisibility : MonoBehaviour
         if (manager == null || mobileControlsRoot == null)
             return;
 
-        bool isPaused =
-            manager.gameState == GameState.gamePaused;
+        bool shouldHideControls =
+            manager.gameState == GameState.gamePaused ||
+            manager.gameState == GameState.gameLost ||
+            manager.gameState == GameState.gameWon ||
+            manager.gameState == GameState.restartGame;
 
-        bool shouldShowControls = !isPaused;
+        bool shouldShowControls = !shouldHideControls;
 
         if (mobileControlsRoot.activeSelf != shouldShowControls)
         {

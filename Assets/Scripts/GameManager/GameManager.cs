@@ -14,6 +14,11 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     [Header("GAMEOBJECT REFERENCES")]
     #endregion
     [SerializeField] private GameObject pauseMenu;
+    [Header("Mobile Game Over")]
+    [SerializeField]
+    private GameObject gameOverReturnButton;
+
+    private bool gameOverReturnRequested = false;
 
     [SerializeField] private TextMeshProUGUI messageTextTMP;
     [SerializeField] private CanvasGroup canvasGroup;
@@ -107,12 +112,19 @@ public class GameManager : SingletonMonobehaviour<GameManager>
         gameState = GameState.gameLost;
     }
 
-    private void Start(){
+    private void Start()
+    {
+        if (gameOverReturnButton != null)
+        {
+            gameOverReturnButton.SetActive(false);
+        }
+
+        gameOverReturnRequested = false;
+
         previousGameState = GameState.gameStarted;
         gameState = GameState.gameStarted;
 
         gameScore = 0;
-
         scoreMultiplier = 1;
 
         StartCoroutine(Fade(0f, 1f, 0f, Color.black));
@@ -361,49 +373,251 @@ public class GameManager : SingletonMonobehaviour<GameManager>
         isFading = false;
     }
 
-    private IEnumerator GameWon(){
+    
+    private IEnumerator GameWon()
+    {
+        // Danh dau da xu ly trang thai chien thang.
         previousGameState = GameState.gameWon;
 
+        // Vo hieu hoa dieu khien Player.
         GetPlayer().playerControl.DisablePlayer();
 
-        yield return StartCoroutine(Fade(0f, 1f, 2f, Color.black));
+        // Reset yeu cau quay ve Main Menu.
+        gameOverReturnRequested = false;
 
-        yield return StartCoroutine(DisplayMessageRoutine("WELL DONE " + GameResources.Instance.currentPlayerSO.playerName + "! YOU HAVE DEFEATED THE DUNGEON", Color.white, 2.5f));
+        // An nut cho den khi hien thi xong ket qua.
+        if (gameOverReturnButton != null)
+        {
+            gameOverReturnButton.SetActive(false);
+        }
 
-        int speedRunTime = (int) Math.Round(speedRunTimer, 0);
+        // Giu nguyen hieu ung Fade goc.
+        yield return StartCoroutine(
+            Fade(0f, 1f, 2f, Color.black)
+        );
+
+        // Thong bao chien thang.
+        string wonText =
+            "WELL DONE " +
+            GameResources.Instance.currentPlayerSO.playerName +
+            "! YOU HAVE DEFEATED THE DUNGEON";
+
+        yield return StartCoroutine(
+            DisplayMessageRoutine(
+                wonText,
+                Color.white,
+                2.5f
+            )
+        );
+
+        // Tinh thoi gian hoan thanh game.
+        int speedRunTime = (int)Math.Round(speedRunTimer, 0);
+
         int speedRunMinute = speedRunTime / 60;
         int speedRunSecond = speedRunTime % 60;
 
-        yield return StartCoroutine(DisplayMessageRoutine("YOU BEAT THE GAME IN " + speedRunMinute.ToString() + ":" + speedRunSecond.ToString(), Color.white, 2.5f));
+        string timeText =
+            "YOU BEAT THE GAME IN " +
+            speedRunMinute.ToString() +
+            ":" +
+            speedRunSecond.ToString("00");
 
-        yield return StartCoroutine(DisplayMessageRoutine("PRESS ENTER TO RESTART THE GAME", Color.white, 0f));
+        yield return StartCoroutine(
+            DisplayMessageRoutine(
+                timeText,
+                Color.white,
+                2.5f
+            )
+        );
 
-        gameState = GameState.restartGame;
-    }
-
-    private IEnumerator GameLost(){
-        previousGameState = GameState.gameLost;
-
-        GetPlayer().playerControl.DisablePlayer();
-
-        yield return new WaitForSeconds(1f);
-
-        yield return StartCoroutine(Fade(0f, 1f, 2f, Color.black));
-
-        Enemy[] enemyArray = GameObject.FindObjectsOfType<Enemy>();
-        foreach (Enemy enemy in enemyArray){
-            enemy.gameObject.SetActive(false);
+        // Hien thong bao phu hop voi thiet bi.
+        if (Application.isMobilePlatform)
+        {
+            messageTextTMP.SetText(
+                "YOU WIN! TAP MAIN MENU TO CONTINUE"
+            );
+        }
+        else
+        {
+            messageTextTMP.SetText(
+                "YOU WIN! PRESS ENTER OR TAP MAIN MENU"
+            );
         }
 
-        string lostText = "NICE TRY " + GameResources.Instance.currentPlayerSO.playerName + "\n BUT YOU LOST!";
-        yield return StartCoroutine(DisplayMessageRoutine(lostText, Color.white, 2.5f));
+        messageTextTMP.color = Color.white;
 
-        yield return StartCoroutine(DisplayMessageRoutine("PRESS ENTER TO RESTART GAME", Color.white, 0f));
+        // Hien nut quay ve Main Menu.
+        if (gameOverReturnButton != null)
+        {
+            gameOverReturnButton.SetActive(true);
+        }
+        else
+        {
+            Debug.LogError(
+                "GameManager: GameOverReturnButton " +
+                "has not been assigned!"
+            );
 
+            // Tranh ket tren Android neu thieu reference.
+            if (Application.isMobilePlatform)
+            {
+                yield return new WaitForSecondsRealtime(3f);
+                gameState = GameState.restartGame;
+                yield break;
+            }
+        }
+
+        // PC co the nhan Enter.
+        // Android co the cham nut MAIN MENU.
+        while (!gameOverReturnRequested &&
+            !Input.GetKeyDown(KeyCode.Return))
+        {
+            yield return null;
+        }
+
+        // Don dep UI.
+        messageTextTMP.SetText("");
+
+        if (gameOverReturnButton != null)
+        {
+            gameOverReturnButton.SetActive(false);
+        }
+
+        // Su dung luong chuyen scene co san.
+        gameState = GameState.restartGame;
+    }
+    
+    public void RequestReturnToMainMenuAfterDeath()
+    {
+        // Cho phep o ca trang thai thang va thua.
+        bool isGameFinished =
+            gameState == GameState.gameLost ||
+            gameState == GameState.gameWon;
+
+        if (!isGameFinished)
+            return;
+
+        // Khong xu ly neu nut chua duoc hien.
+        if (gameOverReturnButton == null ||
+            !gameOverReturnButton.activeInHierarchy)
+            return;
+
+        gameOverReturnRequested = true;
+    }
+
+
+    private IEnumerator GameLost()
+    {
+        // Danh dau da bat dau xu ly game thua.
+        previousGameState = GameState.gameLost;
+
+        // Vo hieu hoa input cua Player.
+        GetPlayer().playerControl.DisablePlayer();
+
+        gameOverReturnRequested = false;
+
+        // Dam bao nut chua xuat hien qua som.
+        if (gameOverReturnButton != null)
+        {
+            gameOverReturnButton.SetActive(false);
+        }
+
+        // Giu nguyen khoang cho trong source goc.
+        yield return new WaitForSeconds(1f);
+
+        // Fade man hinh sang mau den.
+        yield return StartCoroutine(
+            Fade(0f, 1f, 2f, Color.black)
+        );
+
+        // Tat Enemy nhu logic goc.
+        Enemy[] enemyArray =
+            GameObject.FindObjectsOfType<Enemy>();
+
+        foreach (Enemy enemy in enemyArray)
+        {
+            if (enemy != null)
+            {
+                enemy.gameObject.SetActive(false);
+            }
+        }
+
+        // Hien thong bao thua.
+        string lostText =
+            "NICE TRY " +
+            GameResources.Instance.currentPlayerSO.playerName +
+            "\n BUT YOU LOST!";
+
+        yield return StartCoroutine(
+            DisplayMessageRoutine(
+                lostText,
+                Color.white,
+                2.5f
+            )
+        );
+
+        // Thong bao cach quay ve Main Menu.
+        if (Application.isMobilePlatform)
+        {
+            messageTextTMP.SetText(
+                "TAP MAIN MENU TO CONTINUE"
+            );
+        }
+        else
+        {
+            messageTextTMP.SetText(
+                "PRESS ENTER OR TAP MAIN MENU"
+            );
+        }
+
+        messageTextTMP.color = Color.white;
+
+        // Hien nut tro ve.
+        if (gameOverReturnButton != null)
+        {
+            gameOverReturnButton.SetActive(true);
+        }
+        else
+        {
+            Debug.LogError(
+                "GameManager: GameOverReturnButton " +
+                "has not been assigned in Inspector!"
+            );
+
+            // Tranh bi ket tren Android neu quen gan nut.
+            if (Application.isMobilePlatform)
+            {
+                yield return new WaitForSecondsRealtime(3f);
+
+                gameState = GameState.restartGame;
+                yield break;
+            }
+        }
+
+        // PC van dung Enter.
+        // Android dung nut UI.
+        while (!gameOverReturnRequested &&
+            !Input.GetKeyDown(KeyCode.Return))
+        {
+            yield return null;
+        }
+
+        // Don dep UI truoc khi chuyen scene.
+        messageTextTMP.SetText("");
+
+        if (gameOverReturnButton != null)
+        {
+            gameOverReturnButton.SetActive(false);
+        }
+
+        // Dung lai GameState restartGame san co.
         gameState = GameState.restartGame;
     }
 
-    private void RestartGame(){
+    private void RestartGame()
+    {
+        Time.timeScale = 1f;
+
         SceneManager.LoadScene("MainMenuScene");
     }
 

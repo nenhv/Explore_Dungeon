@@ -23,6 +23,8 @@ public class PlayerControl : MonoBehaviour
     private Vector2 lastMobileAimDirection = Vector2.right;
     private bool leftMouseDownPreviousFrame = false;
     private int currentWeaponIndex = 1;
+    // Huong di chuyen hop le cuoi cung.
+    private Vector2 lastMoveDirection = Vector2.down;
     private float moveSpeed;
     private Coroutine playerRollCoroutine;
     private WaitForFixedUpdate waitForFixedUpdate;
@@ -64,26 +66,50 @@ public class PlayerControl : MonoBehaviour
         player.animator.speed = moveSpeed / Settings.baseSpeedForPlayerAnimation;
     }
 
+    
     private void Update()
     {
         if (isPlayerMovementDisabled || isPlayerRolling)
         {
+            // Khong cho cac lenh cham cu duoc xu ly sau.
+            MobileActionButton.ClearPendingPresses();
+
             fireTime = 0f;
             leftMouseDownPreviousFrame = false;
             hasMobileTarget = false;
+
             return;
         }
 
+        // 1. Di chuyen bang joystick hoac WASD.
         MovementInput();
 
+        // 2. Xu ly nut Roll.
+        HandleMobileRollInput();
+
+        // Neu vua bat dau Roll, dung xu ly input khac.
+        if (isPlayerRolling)
+        {
+            MobileActionButton.ClearPendingPresses();
+
+            fireTime = 0f;
+            leftMouseDownPreviousFrame = false;
+            hasMobileTarget = false;
+
+            PlayerRollCooldownTimer();
+            return;
+        }
+
+        // 3. Ngam, ban, doi sung, nap dan.
         WeaponInput();
 
+        // 4. Tuong tac voi vat pham.
         UseItemInput();
 
+        // 5. Cap nhat cooldown Roll.
         PlayerRollCooldownTimer();
     }
 
-    
     private void MovementInput()
     {
         Vector2 direction = Vector2.zero;
@@ -116,6 +142,11 @@ public class PlayerControl : MonoBehaviour
             direction = Vector2.ClampMagnitude(direction, 1f);
         }
 
+        // Ghi nho huong di chuyen de dung cho Roll.
+        if (direction.sqrMagnitude > 0.0001f)
+        {
+            lastMoveDirection = direction.normalized;
+        }
         // 2. Kiểm tra có yêu cầu di chuyển không.
         if (direction.sqrMagnitude > 0.0001f)
         {
@@ -139,6 +170,40 @@ public class PlayerControl : MonoBehaviour
             // 5. Không có input -> đứng yên.
             player.idleEvent.CallIdleEvent();
         }
+    }
+
+    private void HandleMobileRollInput()
+    {
+        // Chi xu ly khi co mot lan cham Roll moi.
+        bool rollPressed =
+            MobileActionButton.ConsumePress(
+                MobileActionType.Roll
+            );
+
+        if (!rollPressed)
+            return;
+
+        // Khong Roll neu dang Roll hoac dang cooldown.
+        if (isPlayerRolling || playerRollCooldownTimer > 0f)
+            return;
+
+        Vector2 rollDirection = lastMoveDirection;
+
+        // Uu tien huong joystick neu nguoi choi dang keo.
+        MobileJoystick joystick = MobileJoystick.Instance;
+
+        if (joystick != null &&
+            joystick.IsPressed &&
+            joystick.Direction.sqrMagnitude > 0.0001f)
+        {
+            rollDirection = joystick.Direction.normalized;
+        }
+
+        if (rollDirection.sqrMagnitude <= 0.0001f)
+            return;
+
+        // Goi lai co che Roll co san trong project.
+        PlayerRoll((Vector3)rollDirection);
     }
 
     private void PlayerRoll(Vector3 direction){
@@ -358,6 +423,15 @@ public class PlayerControl : MonoBehaviour
 
 
     private void SwitchWeaponInput(){
+        bool mobileSwitchPressed =
+            MobileActionButton.ConsumePress(
+                MobileActionType.SwitchWeapon
+            );
+
+        if (mobileSwitchPressed && player.weaponList.Count > 1)
+        {
+            NextWeapon();
+        }
         if (Input.mouseScrollDelta.y < 0f){
             PreviousWeapon();
         }
@@ -448,40 +522,105 @@ public class PlayerControl : MonoBehaviour
         SetWeaponByIndex(previousWeaponIndex);
     }
 
-    private void ReloadWeaponInput(){
-        Weapon currentWeapon = player.activeWeapon.GetCurrentWeapon();
-        int weaponClipAmmoCapacity = currentWeapon.weaponDetails.weaponClipAmmoCapacity;
-        int weaponClipRemainingAmmo = currentWeapon.weaponClipRemainingAmmo;
-        bool hasInfiniteAmmo = currentWeapon.weaponDetails.hasInfiniteAmmo;
-        bool hasInfiniteClipCapacity = currentWeapon.weaponDetails.hasInfiniteClipCapacity;
+    
+    private void ReloadWeaponInput()
+    {
+        // Lay lenh tu nut Reload cam ung.
+        bool mobileReloadPressed =
+            MobileActionButton.ConsumePress(
+                MobileActionType.Reload
+            );
 
-        if (currentWeapon.isWeaponReloading) return;
+        Weapon currentWeapon =
+            player.activeWeapon.GetCurrentWeapon();
 
-        if (currentWeapon.weaponRemainingAmmo <= 0 && !hasInfiniteAmmo) return;
+        if (currentWeapon == null)
+            return;
 
-        // Clip is full
-        if (weaponClipRemainingAmmo == weaponClipAmmoCapacity) return;
+        int weaponClipAmmoCapacity =
+            currentWeapon.weaponDetails.weaponClipAmmoCapacity;
 
-        if (Input.GetKeyDown(KeyCode.R) || (!hasInfiniteClipCapacity && currentWeapon.weaponClipRemainingAmmo <= 0)){
-            player.reloadWeaponEvent.CallReloadWeaponEvent(currentWeapon, 0);
+        int weaponClipRemainingAmmo =
+            currentWeapon.weaponClipRemainingAmmo;
+
+        bool hasInfiniteAmmo =
+            currentWeapon.weaponDetails.hasInfiniteAmmo;
+
+        bool hasInfiniteClipCapacity =
+            currentWeapon.weaponDetails.hasInfiniteClipCapacity;
+
+        // Khong nap lai khi dang reload.
+        if (currentWeapon.isWeaponReloading)
+            return;
+
+        // Khong con dan du tru.
+        if (currentWeapon.weaponRemainingAmmo <= 0 &&
+            !hasInfiniteAmmo)
+        {
+            return;
+        }
+
+        // Bang dan da day.
+        if (weaponClipRemainingAmmo == weaponClipAmmoCapacity)
+            return;
+
+        bool keyboardReloadPressed =
+            Input.GetKeyDown(KeyCode.R);
+
+        // Giu co che tu reload khi het dan.
+        bool shouldAutoReload =
+            !hasInfiniteClipCapacity &&
+            currentWeapon.weaponClipRemainingAmmo <= 0;
+
+        if (keyboardReloadPressed ||
+            mobileReloadPressed ||
+            shouldAutoReload)
+        {
+            // Dung event Reload co san.
+            player.reloadWeaponEvent.CallReloadWeaponEvent(
+                currentWeapon,
+                0
+            );
         }
     }
 
-    private void UseItemInput(){
-        if (Input.GetKeyDown(KeyCode.E)){
-            float useItemRadius = 2.5f;
 
-            Collider2D[] collider2DArray = Physics2D.OverlapCircleAll(player.GetPlayerPosition(), useItemRadius);
+    
+    private void UseItemInput()
+    {
+        bool keyboardUsePressed =
+            Input.GetKeyDown(KeyCode.E);
 
-            foreach (Collider2D collider2D in collider2DArray){
-                IUseable iUseable = collider2D.GetComponent<IUseable>();
+        bool mobileUsePressed =
+            MobileActionButton.ConsumePress(
+                MobileActionType.Use
+            );
 
-                if (iUseable != null){
-                    iUseable.UseItem();
-                }
+        // Khong nhan E va khong cham USE -> bo qua.
+        if (!keyboardUsePressed && !mobileUsePressed)
+            return;
+
+        // Giu nguyen ban kinh tuong tac cua game goc.
+        float useItemRadius = 2.5f;
+
+        Collider2D[] nearbyColliders =
+            Physics2D.OverlapCircleAll(
+                player.GetPlayerPosition(),
+                useItemRadius
+            );
+
+        foreach (Collider2D collider2D in nearbyColliders)
+        {
+            IUseable useable =
+                collider2D.GetComponent<IUseable>();
+
+            if (useable != null)
+            {
+                useable.UseItem();
             }
         }
     }
+
 
     private void OnCollisionEnter2D(Collision2D collision){
         StopPlayerRollRountine();
@@ -498,14 +637,29 @@ public class PlayerControl : MonoBehaviour
         }
     }
 
-    public void EnablePlayer(){
+
+    public void EnablePlayer()
+    {
+        // Khong su dung lai cac lenh cham cu.
+        MobileActionButton.ResetAllInputs();
+
         isPlayerMovementDisabled = false;
     }
 
-    public void DisablePlayer(){
+    public void DisablePlayer()
+    {
         isPlayerMovementDisabled = true;
+
+        // Xoa cac yeu cau action dang cho.
+        MobileActionButton.ResetAllInputs();
+
+        fireTime = 0f;
+        leftMouseDownPreviousFrame = false;
+        hasMobileTarget = false;
+
         player.idleEvent.CallIdleEvent();
     }
+
 
     private void SetCurrentWeaponToFirstInTheList(){
         List<Weapon> tempWeaponList = new List<Weapon>();

@@ -262,6 +262,18 @@ public class GameManager : SingletonMonobehaviour<GameManager>
 
         DungeonMap.Instance.DisplayDungeonOverViewMap();
     }
+    
+    public void OpenDungeonOverviewMapFromUI()
+    {
+        // Giu dung dieu kien mo map cua phim Tab.
+        if (gameState != GameState.playingLevel &&
+            gameState != GameState.bossStage)
+        {
+            return;
+        }
+
+        DisplayDungeonOverviewMap();
+    }
 
     private void PlayDungeonLevel(int dungeonLeveListIndex){
 

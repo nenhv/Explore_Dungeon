@@ -17,7 +17,8 @@ public class MobilePauseHUDVisibility : MonoBehaviour
             manager.gameState == GameState.gamePaused ||
             manager.gameState == GameState.gameLost ||
             manager.gameState == GameState.gameWon ||
-            manager.gameState == GameState.restartGame;
+            manager.gameState == GameState.restartGame ||
+            manager.gameState == GameState.dungeonOverviewMap;
 
         bool shouldShowControls = !shouldHideControls;
 

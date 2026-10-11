@@ -1083,10 +1083,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
+    x: 0.18052255
     y: 0
-    width: 1
-    height: 1
+    width: 0.6384797
+    height: 0.9993391
   near clip plane: 0.1
   far clip plane: 5000
   field of view: 40
@@ -7892,6 +7892,7 @@ GameObject:
   - component: {fileID: 2066804822}
   - component: {fileID: 2066804824}
   - component: {fileID: 2066804825}
+  - component: {fileID: 2066804826}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -7956,6 +7957,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   miniMapCamera: {fileID: 1637967687}
+--- !u!114 &2066804826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2066804821}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7323694aafb61c4fb47e8ac44fc7ee5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StartingWeaponChestSpawner
+  chestPrefab: {fileID: 7657829287104957351, guid: cd36b9da4eab13c43bd103617e0a7244, type: 3}
+  weapons:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  randomWeaponPool:
+  - {fileID: 11400000, guid: 7930c7f7215961e499a8d4673b56c149, type: 2}
+  - {fileID: 11400000, guid: 6bb2b14af07de234ab6e411a57e80531, type: 2}
+  - {fileID: 11400000, guid: 02007307b229069419f31b114eebceb2, type: 2}
+  - {fileID: 11400000, guid: d9a6b783b84e17f45981467c73863802, type: 2}
+  - {fileID: 11400000, guid: e5c13ddb9ef6bed46b9f7e34e5e95af9, type: 2}
+  - {fileID: 11400000, guid: 8c78478be0fd34d49aa402144403f6a6, type: 2}
+  - {fileID: 11400000, guid: 13a67e79662ac724a8ebc81a32c2abbc, type: 2}
+  - {fileID: 11400000, guid: 9016f731c2d4d334f89d2b4a691f5a71, type: 2}
+  - {fileID: 11400000, guid: 59c5b1c16ee9fff428d4d6eb595f4ef2, type: 2}
+  offsets:
+  - {x: -5.5, y: 3}
+  - {x: 0, y: 5}
+  - {x: 5.5, y: 3}
 --- !u!1 &2066943973
 GameObject:
   m_ObjectHideFlags: 0

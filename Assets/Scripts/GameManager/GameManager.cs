@@ -289,7 +289,20 @@ public class GameManager : SingletonMonobehaviour<GameManager>
             (currentRoom.lowerBounds.y + currentRoom.upperBounds.y) / 2f, 0f);
 
         player.gameObject.transform.position = HelperUtilities.GetSpawnPositionNearestToPlayer(Playerposition);
+        // Chi sinh 3 ruong sung o level dau tien.
+        if (dungeonLeveListIndex == 0)
+        {
+            StartingWeaponChestSpawner spawner =
+                GetComponent<StartingWeaponChestSpawner>();
 
+            if (spawner != null)
+            {
+                spawner.SpawnStartingChests(
+                    currentRoom,
+                    player.transform.position
+                );
+            }
+        }
         StartCoroutine(DisplayDungeonLevelText());
     }
 

@@ -1,0 +1,5 @@
+E:/x/project_game_tham_khao/Explore_Dungeon/.utmp/RelWithDebInfo/h6aw3g2c/armeabi-v7a/CMakeFiles/edit_cache.dir
+E:/x/project_game_tham_khao/Explore_Dungeon/.utmp/RelWithDebInfo/h6aw3g2c/armeabi-v7a/CMakeFiles/rebuild_cache.dir
+E:/x/project_game_tham_khao/Explore_Dungeon/.utmp/RelWithDebInfo/h6aw3g2c/armeabi-v7a/FramePacing/CMakeFiles/swappywrapper.dir
+E:/x/project_game_tham_khao/Explore_Dungeon/.utmp/RelWithDebInfo/h6aw3g2c/armeabi-v7a/FramePacing/CMakeFiles/edit_cache.dir
+E:/x/project_game_tham_khao/Explore_Dungeon/.utmp/RelWithDebInfo/h6aw3g2c/armeabi-v7a/FramePacing/CMakeFiles/rebuild_cache.dir

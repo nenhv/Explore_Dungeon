@@ -436,7 +436,7 @@ MonoBehaviour:
       m_rawData: 1099511693489
     m_ExpandedIDs:
     - m_rawData: 0
-    - m_rawData: 1099511668247
+    - m_rawData: 1099511668360
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -470,7 +470,7 @@ MonoBehaviour:
       m_rawData: 0
     m_ExpandedIDs:
     - m_rawData: 0
-    - m_rawData: 1099511668247
+    - m_rawData: 1099511668360
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1088,7 +1088,7 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: 425.9079, y: 119.3616, z: 3.0774786}
+    m_Target: {x: 514.54144, y: 253.96608, z: 1.7022966}
     speed: 2
     m_Value: {x: 425.9079, y: 119.3616, z: 3.0774786}
   m_RenderMode: 0
@@ -1141,7 +1141,7 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: 0, y: 0, z: 0, w: 1}
   m_Size:
-    m_Target: 184.89197
+    m_Target: 322.41794
     speed: 2
     m_Value: 184.89197
   m_Ortho:
@@ -1245,10 +1245,10 @@ MonoBehaviour:
     m_VRangeLocked: 0
     hZoomLockedByDefault: 0
     vZoomLockedByDefault: 0
-    m_HBaseRangeMin: -348.64
-    m_HBaseRangeMax: 348.64
-    m_VBaseRangeMin: -171.92
-    m_VBaseRangeMax: 171.92
+    m_HBaseRangeMin: -435.80002
+    m_HBaseRangeMax: 435.80002
+    m_VBaseRangeMin: -214.90001
+    m_VBaseRangeMax: 214.90001
     m_HAllowExceedBaseRangeMin: 1
     m_HAllowExceedBaseRangeMax: 1
     m_VAllowExceedBaseRangeMin: 1
@@ -1281,7 +1281,7 @@ MonoBehaviour:
       width: 697.28
       height: 343.84
     m_MinimalGUI: 1
-  m_defaultScale: 1
+  m_defaultScale: 0.99999994
   m_LastWindowPixelSize: {x: 1089.5, y: 563.5}
   m_ClearInEditMode: 1
   m_NoCameraWarning: 1

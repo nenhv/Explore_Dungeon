@@ -1,62 +1,93 @@
+
 using UnityEngine;
-using TMPro;
 using UnityEngine.SceneManagement;
-using System.Collections;
+using TMPro;
 
 public class PauseMenuUI : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI musicLevelText;
-    [SerializeField] private TextMeshProUGUI soundsLevelText;
-    private void Start(){
+    [SerializeField] private TMP_Text musicLevelText;
+    [SerializeField] private TMP_Text soundsLevelText;
+
+    // Optional: gan neu them nut Mute All vao Pause Menu.
+    [SerializeField] private TMP_Text muteAllButtonText;
+
+    private void Start()
+    {
         gameObject.SetActive(false);
     }
 
-    private IEnumerator InitializeUI(){
-        yield return null;
-
-        soundsLevelText.SetText(SoundEffectManager.Instance.soundsVolume.ToString());
-        musicLevelText.SetText(MusicManager.Instance.musicVolume.ToString());
-    }
-
-    private void OnEnable(){
+    private void OnEnable()
+    {
         Time.timeScale = 0f;
-
-        StartCoroutine(InitializeUI());
+        RefreshUI();
     }
-    private void OnDisable(){
+
+    private void OnDisable()
+    {
         Time.timeScale = 1f;
     }
 
-    public void LoadMainMenu(){
+    private void RefreshUI()
+    {
+        if (musicLevelText != null)
+        {
+            musicLevelText.text =
+                GameSettingsManager.MusicVolume.ToString();
+        }
+
+        if (soundsLevelText != null)
+        {
+            soundsLevelText.text =
+                GameSettingsManager.SfxVolume.ToString();
+        }
+
+        if (muteAllButtonText != null)
+        {
+            muteAllButtonText.text =
+                GameSettingsManager.MuteAll
+                    ? "UNMUTE ALL"
+                    : "MUTE ALL";
+        }
+    }
+
+    public void IncreaseMusicVolume()
+    {
+        GameSettingsManager.SetMusicVolume(
+            GameSettingsManager.MusicVolume + 1);
+        RefreshUI();
+    }
+
+    public void DecreaseMusicVolume()
+    {
+        GameSettingsManager.SetMusicVolume(
+            GameSettingsManager.MusicVolume - 1);
+        RefreshUI();
+    }
+
+    // Giu nguyen ten ham cu:
+    // IncreaseSoundvolume (chu v viet thuong).
+    public void IncreaseSoundvolume()
+    {
+        GameSettingsManager.SetSfxVolume(
+            GameSettingsManager.SfxVolume + 1);
+        RefreshUI();
+    }
+
+    public void DecreaseSoundsVolume()
+    {
+        GameSettingsManager.SetSfxVolume(
+            GameSettingsManager.SfxVolume - 1);
+        RefreshUI();
+    }
+
+    public void ToggleMuteAll()
+    {
+        GameSettingsManager.ToggleMuteAll();
+        RefreshUI();
+    }
+
+    public void LoadMainMenu()
+    {
         SceneManager.LoadScene("MainMenuScene");
     }
-
-    public void IncreaseMusicVolume(){
-        MusicManager.Instance.IncreaseMusicVolume();
-        musicLevelText.SetText(MusicManager.Instance.musicVolume.ToString());
-    }
-
-    public void DecreaseMusicVolume(){
-        MusicManager.Instance.DecreaseMusicVolume();
-        musicLevelText.SetText(MusicManager.Instance.musicVolume.ToString());
-    }
-
-    public void IncreaseSoundvolume(){
-        SoundEffectManager.Instance.IncreaseSoundVolume();
-        soundsLevelText.SetText(SoundEffectManager.Instance.soundsVolume.ToString());
-    }
-
-    public void DecreaseSoundsVolume(){
-        SoundEffectManager.Instance.DecreaseSoundVolume();
-        soundsLevelText.SetText(SoundEffectManager.Instance.soundsVolume.ToString());
-    }
-
-    #region Validation
-#if UNITY_EDITOR
-    private void OnValidate(){
-        HelperUtilities.ValidateCheckNullValue(this, nameof(musicLevelText), musicLevelText);
-        HelperUtilities.ValidateCheckNullValue(this, nameof(soundsLevelText), soundsLevelText);
-    }
-#endif
-    #endregion
 }

@@ -8,18 +8,6 @@ public class SoundEffectManager : SingletonMonobehaviour<SoundEffectManager>
 {
     public int soundsVolume = 10;
 
-    private void Start(){
-        if (PlayerPrefs.HasKey("soundsVolume")){
-            soundsVolume = PlayerPrefs.GetInt("soundsVolume");
-        }
-
-        SetSoundsVolume(soundsVolume);
-    }
-
-    private void OnDisable(){
-        PlayerPrefs.SetInt("soundsVolume", soundsVolume);
-    }
-
     public void PlaySoundEffect(SoundEffectSO soundEffect){
         SoundEffect sound = (SoundEffect) PoolManager.Instance.ReuseComponent(soundEffect.soundPrefab, Vector3.zero, Quaternion.identity);
         sound.SetSound(soundEffect);
@@ -31,35 +19,44 @@ public class SoundEffectManager : SingletonMonobehaviour<SoundEffectManager>
         yield return new WaitForSeconds(soundDuration);
         sound.gameObject.SetActive(false);
     }
-
-    public void IncreaseSoundVolume(){
-        int maxSoundVolume = 20;
-
-        if (soundsVolume >= maxSoundVolume) return;
-
-        soundsVolume += 1;
-
-        SetSoundsVolume(soundsVolume);
+    
+    private void OnEnable()
+    {
+        GameSettingsManager.Changed += SyncVolume;
     }
 
-    public void DecreaseSoundVolume(){
-        int minSoundVolume = 0;
-
-        if (soundsVolume <= minSoundVolume) return;
-
-        soundsVolume -= 1;
-
-        SetSoundsVolume(soundsVolume);
+    private void Start()
+    {
+        SyncVolume();
+        GameSettingsManager.ApplyAudio();
     }
 
-    private void SetSoundsVolume(int soundsVolume){
-        float muteDecibels = -80f;
-        if (soundsVolume == 0){
-            GameResources.Instance.soundsMasterMixerGroup.audioMixer.SetFloat("soundsVolume",
-                muteDecibels);
-        } else {
-            GameResources.Instance.soundsMasterMixerGroup.audioMixer.SetFloat("soundsVolume", 
-                HelperUtilities.LinearToDecibels(soundsVolume));
-        }
+    private void OnDisable()
+    {
+        GameSettingsManager.Changed -= SyncVolume;
+    }
+
+    private void SyncVolume()
+    {
+        soundsVolume = GameSettingsManager.SfxVolume;
+    }
+
+    public void IncreaseSoundVolume()
+    {
+        GameSettingsManager.SetSfxVolume(
+            GameSettingsManager.SfxVolume + 1
+        );
+    }
+
+    public void DecreaseSoundVolume()
+    {
+        GameSettingsManager.SetSfxVolume(
+            GameSettingsManager.SfxVolume - 1
+        );
+    }
+
+    private void SetSoundsVolume(int value)
+    {
+        GameSettingsManager.SetSfxVolume(value);
     }
 }

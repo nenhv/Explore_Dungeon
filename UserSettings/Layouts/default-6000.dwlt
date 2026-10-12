@@ -41,7 +41,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 289.6
+    width: 288.8
     height: 226.4
   m_MinSize: {x: 51, y: 76}
   m_MaxSize: {x: 4001, y: 4026}
@@ -215,9 +215,9 @@ MonoBehaviour:
   m_Children: []
   m_Position:
     serializedVersion: 2
-    x: 289.6
+    x: 288.8
     y: 0
-    width: 881.6
+    width: 882.39996
     height: 226.4
   m_MinSize: {x: 202, y: 226}
   m_MaxSize: {x: 4002, y: 4026}
@@ -302,7 +302,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 24
-    width: 288.6
+    width: 287.8
     height: 200.4
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -436,7 +436,7 @@ MonoBehaviour:
       m_rawData: 1099511693489
     m_ExpandedIDs:
     - m_rawData: 0
-    - m_rawData: 1099511653365
+    - m_rawData: 1099511653414
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -470,7 +470,7 @@ MonoBehaviour:
       m_rawData: 0
     m_ExpandedIDs:
     - m_rawData: 0
-    - m_rawData: 1099511653365
+    - m_rawData: 1099511653414
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -554,9 +554,9 @@ MonoBehaviour:
     m_TextWithWhitespace: "Scene\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 290.6
+    x: 289.8
     y: 24
-    width: 879.6
+    width: 880.39996
     height: 200.4
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -1088,9 +1088,9 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: 581.7175, y: 215.56406, z: -1.2748076}
+    m_Target: {x: 454.61005, y: 223.75896, z: -1.4963962}
     speed: 2
-    m_Value: {x: 514.54144, y: 253.96608, z: 1.7022966}
+    m_Value: {x: 581.7175, y: 215.56406, z: -1.2748076}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -1141,9 +1141,9 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: 0, y: 0, z: 0, w: 1}
   m_Size:
-    m_Target: 239.28499
+    m_Target: 261.4408
     speed: 2
-    m_Value: 322.41794
+    m_Value: 239.28499
   m_Ortho:
     m_Target: 1
     speed: 2

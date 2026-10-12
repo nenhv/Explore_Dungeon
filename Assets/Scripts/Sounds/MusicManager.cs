@@ -10,6 +10,46 @@ public class MusicManager : SingletonMonobehaviour<MusicManager>
     private Coroutine fadeInMusicCoroutine;
     public int musicVolume = 10;
 
+    private void OnEnable()
+    {
+        GameSettingsManager.Changed += SyncVolume;
+    }
+
+    private void Start()
+    {
+        SyncVolume();
+        GameSettingsManager.ApplyAudio();
+    }
+
+    private void OnDisable()
+    {
+        GameSettingsManager.Changed -= SyncVolume;
+    }
+
+    private void SyncVolume()
+    {
+        musicVolume = GameSettingsManager.MusicVolume;
+    }
+
+    public void IncreaseMusicVolume()
+    {
+        GameSettingsManager.SetMusicVolume(
+            GameSettingsManager.MusicVolume + 1
+        );
+    }
+
+    public void DecreaseMusicVolume()
+    {
+        GameSettingsManager.SetMusicVolume(
+            GameSettingsManager.MusicVolume - 1
+        );
+    }
+
+    public void SetMusicVolume(int value)
+    {
+        GameSettingsManager.SetMusicVolume(value);
+    }
+
     protected override void Awake(){
         base.Awake();
 
@@ -17,19 +57,6 @@ public class MusicManager : SingletonMonobehaviour<MusicManager>
 
         GameResources.Instance.musicOffSnapshot.TransitionTo(0f);
     }
-
-    private void Start(){
-        if (PlayerPrefs.HasKey("musicVolume")){
-            musicVolume = PlayerPrefs.GetInt("musicVolume");
-        }
-
-        SetMusicVolume(musicVolume);
-    }
-
-    private void OnDisable(){
-        PlayerPrefs.SetInt("musicVolume", musicVolume);
-    }
-
     public void PlayMusic(MusicTrackSO musicTrack, float fadeOutTime = Settings.musicFadeOutTime, float fadeInTime = Settings.musicFadeInTime){
         StartCoroutine(PlayMusicRoutine(musicTrack, fadeOutTime, fadeInTime));
     }
@@ -65,35 +92,5 @@ public class MusicManager : SingletonMonobehaviour<MusicManager>
         GameResources.Instance.musicOnFullSnapshot.TransitionTo(fadeInTime);
 
         yield return new WaitForSeconds(fadeInTime);
-    }
-
-    public void IncreaseMusicVolume(){
-        int maxMusicVolume = 20;
-
-        if (musicVolume >= maxMusicVolume) return;
-
-        musicVolume += 1;
-
-        SetMusicVolume(musicVolume);
-    }
-
-    public void DecreaseMusicVolume(){
-        int minMusicVolume = 0;
-
-        if (musicVolume <= minMusicVolume) return;
-
-        musicVolume -= 1;
-
-        SetMusicVolume(musicVolume);
-    }
-
-    public void SetMusicVolume(int musicVolume){
-        float muteDecibels = -80f;
-
-        if (musicVolume == 0){
-            GameResources.Instance.musicMasterMixerGroup.audioMixer.SetFloat("musicVolume", muteDecibels);
-        } else {
-            GameResources.Instance.musicMasterMixerGroup.audioMixer.SetFloat("musicVolume", HelperUtilities.LinearToDecibels(musicVolume));
-        }
     }
 }

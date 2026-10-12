@@ -16,6 +16,8 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameObject instructionsButton;
     [SerializeField] private GameObject chooseLevelButton;
     [SerializeField] private GameObject returnToMainMenuButton;
+    [SerializeField] private GameObject settingButton;
+    [SerializeField] private GameObject settingsPanel;
     [Header("Level Selection")]
     [SerializeField] private GameObject levelSelectPanel;
     private bool isInstructionSceneLoaded = false;
@@ -23,6 +25,10 @@ public class MainMenuUI : MonoBehaviour
 
     private void Start()
     {
+        if (settingsPanel != null)
+        {
+            settingsPanel.SetActive(false);
+        }
         LevelLaunchRequest.Reset();
 
         MusicManager.Instance.PlayMusic(
@@ -41,6 +47,26 @@ public class MainMenuUI : MonoBehaviour
         if (levelSelectPanel != null)
         {
             levelSelectPanel.SetActive(false);
+        }
+    }
+    public void OpenSettings()
+    {
+        if (settingsPanel == null)
+        {
+            Debug.LogError("SettingsPanel has not been assigned!");
+            return;
+        }
+        SetCharacterSelectorVisible(false);
+        settingsPanel.SetActive(true);
+    }
+
+    public void CloseSettings()
+    {
+        // Khôi phục giao diện chọn nhân vật
+        SetCharacterSelectorVisible(true);
+        if (settingsPanel != null)
+        {
+            settingsPanel.SetActive(false);
         }
     }
 
@@ -63,6 +89,7 @@ public class MainMenuUI : MonoBehaviour
     
     public void OpenLevelSelection()
     {
+        settingButton.SetActive(false);
         SetCharacterSelectorVisible(false);
         if (levelSelectPanel == null)
         {
@@ -77,6 +104,7 @@ public class MainMenuUI : MonoBehaviour
 
     public void CloseLevelSelection()
     {
+        settingButton.SetActive(true);
         SetCharacterSelectorVisible(true);
         if (levelSelectPanel != null)
         {
@@ -104,6 +132,7 @@ public class MainMenuUI : MonoBehaviour
         highScoresButton.SetActive(false);
         instructionsButton.SetActive(false);
         chooseLevelButton.SetActive(false);
+        settingButton.SetActive(false);
         isHighScoresSceneLoaded = true;
 
         SceneManager.UnloadSceneAsync("CharacterSelectorScene");
@@ -130,6 +159,7 @@ public class MainMenuUI : MonoBehaviour
         highScoresButton.SetActive(true);
         instructionsButton.SetActive(true);
         chooseLevelButton.SetActive(true);
+        settingButton.SetActive(true);
         SceneManager.LoadScene("CharacterSelectorScene", LoadSceneMode.Additive);
     }
 
@@ -139,6 +169,8 @@ public class MainMenuUI : MonoBehaviour
         quitButton.SetActive(false);
         highScoresButton.SetActive(false);
         instructionsButton.SetActive(false);
+        settingButton.SetActive(false);
+
         isInstructionSceneLoaded = true;
 
         SceneManager.UnloadSceneAsync("CharacterSelectorScene");

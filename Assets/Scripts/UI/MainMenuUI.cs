@@ -14,6 +14,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameObject quitButton;
     [SerializeField] private GameObject highScoresButton;
     [SerializeField] private GameObject instructionsButton;
+    [SerializeField] private GameObject chooseLevelButton;
     [SerializeField] private GameObject returnToMainMenuButton;
     [Header("Level Selection")]
     [SerializeField] private GameObject levelSelectPanel;
@@ -102,6 +103,7 @@ public class MainMenuUI : MonoBehaviour
         quitButton.SetActive(false);
         highScoresButton.SetActive(false);
         instructionsButton.SetActive(false);
+        chooseLevelButton.SetActive(false);
         isHighScoresSceneLoaded = true;
 
         SceneManager.UnloadSceneAsync("CharacterSelectorScene");
@@ -125,13 +127,14 @@ public class MainMenuUI : MonoBehaviour
 
         playButton.SetActive(true);
         quitButton.SetActive(true);
-        highScoresButton.SetActive(false);
+        highScoresButton.SetActive(true);
         instructionsButton.SetActive(true);
-
+        chooseLevelButton.SetActive(true);
         SceneManager.LoadScene("CharacterSelectorScene", LoadSceneMode.Additive);
     }
 
     public void LoadInstructions(){
+        chooseLevelButton.SetActive(false);
         playButton.SetActive(false);
         quitButton.SetActive(false);
         highScoresButton.SetActive(false);

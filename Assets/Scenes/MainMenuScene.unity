@@ -674,6 +674,7 @@ MonoBehaviour:
   quitButton: {fileID: 626624385}
   highScoresButton: {fileID: 1509257552}
   instructionsButton: {fileID: 1402547403}
+  chooseLevelButton: {fileID: 1926459387}
   returnToMainMenuButton: {fileID: 1015320323}
   levelSelectPanel: {fileID: 1074626018}
 --- !u!1 &291364484
@@ -3180,10 +3181,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.4237529
+    x: 0.5127062
     y: 0
-    width: 0.5303773
-    height: 0.60009557
+    width: 0.6301085
+    height: 0.7655272
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60

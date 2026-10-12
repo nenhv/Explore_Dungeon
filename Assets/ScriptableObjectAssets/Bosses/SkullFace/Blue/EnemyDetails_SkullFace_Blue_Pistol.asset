@@ -30,6 +30,8 @@ MonoBehaviour:
     enemyHealthAmount: 800
   - dungeonLevel: {fileID: 11400000, guid: 4500060e3106fe540a7036910b581a96, type: 2}
     enemyHealthAmount: 1000
+  - dungeonLevel: {fileID: 11400000, guid: 9ac11bcfbaf2d6f43bc7efece166598c, type: 2}
+    enemyHealthAmount: 1000
   isImmuneAfterHit: 0
   hitImmunityTime: 0
   isHealthBarDisplayed: 1

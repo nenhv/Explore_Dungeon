@@ -15,24 +15,86 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameObject highScoresButton;
     [SerializeField] private GameObject instructionsButton;
     [SerializeField] private GameObject returnToMainMenuButton;
+    [Header("Level Selection")]
+    [SerializeField] private GameObject levelSelectPanel;
     private bool isInstructionSceneLoaded = false;
     private bool isHighScoresSceneLoaded = false;
 
     private void Start()
     {
-        MusicManager.Instance.PlayMusic(GameResources.Instance.mainMenuMusic, 0f, 2f);
+        LevelLaunchRequest.Reset();
 
-        SceneManager.LoadScene("CharacterSelectorScene", LoadSceneMode.Additive);
+        MusicManager.Instance.PlayMusic(
+            GameResources.Instance.mainMenuMusic,
+            0f,
+            2f
+        );
+
+        SceneManager.LoadScene(
+            "CharacterSelectorScene",
+            LoadSceneMode.Additive
+        );
 
         returnToMainMenuButton.SetActive(false);
+
+        if (levelSelectPanel != null)
+        {
+            levelSelectPanel.SetActive(false);
+        }
     }
 
-    public void PlayGame(){
+    public void PlayGame()
+    {
+        // Enter The Dungeon bat dau tu Level 1.
+        LevelLaunchRequest.SelectLevel(1);
+
         SceneManager.LoadScene("MainGameScene");
     }
 
-    public void PlayHardMode(){
+    public void PlayHardMode()
+    {
+        // Hard Mode dung cau hinh rieng,
+        // khong su dung level cho tu Choose Level.
+        LevelLaunchRequest.Reset();
+
         SceneManager.LoadScene("HardModeScene");
+    }
+    
+    public void OpenLevelSelection()
+    {
+        SetCharacterSelectorVisible(false);
+        if (levelSelectPanel == null)
+        {
+            Debug.LogError(
+                "MainMenuUI: Level Select Panel is missing!"
+            );
+            return;
+        }
+
+        levelSelectPanel.SetActive(true);
+    }
+
+    public void CloseLevelSelection()
+    {
+        SetCharacterSelectorVisible(true);
+        if (levelSelectPanel != null)
+        {
+            levelSelectPanel.SetActive(false);
+        }
+    }
+
+    public void PlaySelectedLevel(int levelNumber)
+    {
+        // Truyen so level duoc bam:
+        // Level 1 = 1, Level 2 = 2...
+        bool valid = LevelLaunchRequest.SelectLevel(
+            levelNumber
+        );
+
+        if (!valid)
+            return;
+
+        SceneManager.LoadScene("MainGameScene");
     }
 
     public void LoadHighScores(){
@@ -81,6 +143,36 @@ public class MainMenuUI : MonoBehaviour
         returnToMainMenuButton.SetActive(true);
 
         SceneManager.LoadScene("InstructionsScene", LoadSceneMode.Additive);
+    }
+
+    private void SetCharacterSelectorVisible(bool visible)
+    {
+        // Lay scene chon nhan vat dang load Additive.
+        Scene characterScene =
+            SceneManager.GetSceneByName("CharacterSelectorScene");
+
+        if (!characterScene.IsValid() ||
+            !characterScene.isLoaded)
+        {
+            Debug.LogWarning(
+                "CharacterSelectorScene is not loaded."
+            );
+            return;
+        }
+
+        // Lay cac GameObject goc cua scene.
+        GameObject[] rootObjects =
+            characterScene.GetRootGameObjects();
+
+        foreach (GameObject root in rootObjects)
+        {
+            // An phan nhan vat va giao dien nhap ten.
+            if (root.name == "CharacterSelector" ||
+                root.name == "OptionsInputUI")
+            {
+                root.SetActive(visible);
+            }
+        }
     }
 
     public void QuitGame(){

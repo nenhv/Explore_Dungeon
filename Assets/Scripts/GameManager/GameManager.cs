@@ -36,6 +36,7 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     [Tooltip("Populate with starting the dungeon level for testing, first level =0")]
     #endregion Tooltip
     [SerializeField] private int currentDungeonLevelListIndex;
+    private bool isSingleLevelRun = false;
     private Room currentRoom;
     private Room previousRoom;
     private PlayerDetailsSO playerDetails;
@@ -46,15 +47,48 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     private int scoreMultiplier;
     private InstantiatedRoom bossRoom;
     private bool isFading = false;
+    private bool dungeonInitializationFailed = false;
     private float speedRunTimer = 0.0f;
 
-    protected override void Awake(){
+
+    protected override void Awake()
+    {
         base.Awake();
 
-        playerDetails = GameResources.Instance.currentPlayerSO.playerDetails;
+        // Nhan level duoc chon tu MainMenuScene.
+        int requestedLevelIndex =
+            LevelLaunchRequest.Consume();
+
+        if (requestedLevelIndex >= 0)
+        {
+            if (dungeonLevelList != null &&
+                requestedLevelIndex < dungeonLevelList.Count &&
+                dungeonLevelList[requestedLevelIndex] != null)
+            {
+                currentDungeonLevelListIndex =
+                    requestedLevelIndex;
+
+                isSingleLevelRun = true;
+            }
+            else
+            {
+                Debug.LogError(
+                    "GameManager: Requested Level " +
+                    (requestedLevelIndex + 1) +
+                    " is missing from Dungeon Level List."
+                );
+
+                currentDungeonLevelListIndex = 0;
+                isSingleLevelRun = false;
+            }
+        }
+
+        playerDetails =
+            GameResources.Instance.currentPlayerSO.playerDetails;
 
         InstantiatePlayer();
     }
+
 
     private void InstantiatePlayer(){
         GameObject playerGameObject = Instantiate(playerDetails.playerPrefab);
@@ -86,7 +120,9 @@ public class GameManager : SingletonMonobehaviour<GameManager>
         SetCurrentRoom(roomChangedEventArgs.room);
     }
 
-    private void StaticEventHandler_OnRoomEnemiesDefeated(RoomEnemiesDefeatedArgs roomEnemiesDefeatedArgs){
+    private void StaticEventHandler_OnRoomEnemiesDefeated(
+        RoomEnemiesDefeatedArgs roomEnemiesDefeatedArgs)
+    {
         RoomEnemiesDefeated();
     }
 
@@ -137,9 +173,14 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     }
 
     private void HandleGameState(){
+        if (dungeonInitializationFailed) return;
+
         switch(gameState){
             case GameState.gameStarted:
                 PlayDungeonLevel(currentDungeonLevelListIndex);
+
+                if (dungeonInitializationFailed) break;
+
                 gameState = GameState.playingLevel;
                 RoomEnemiesDefeated();
                 break;
@@ -225,10 +266,23 @@ public class GameManager : SingletonMonobehaviour<GameManager>
             }
         }
 
-        if ((isDungeonClearOfRegularEnemies && bossRoom == null) || (isDungeonClearOfRegularEnemies && bossRoom.room.isClearedOfEnemies)){
-            if (currentDungeonLevelListIndex < dungeonLevelList.Count -1){
+        if ((isDungeonClearOfRegularEnemies && bossRoom == null) ||
+            (isDungeonClearOfRegularEnemies &&
+            bossRoom.room.isClearedOfEnemies))
+        {
+            // Choose Level: hoan thanh dung level da chon.
+            if (isSingleLevelRun)
+            {
+                gameState = GameState.gameWon;
+            }
+            // Che do choi nhieu level sau nay.
+            else if (currentDungeonLevelListIndex <
+                    dungeonLevelList.Count - 1)
+            {
                 gameState = GameState.levelCompleted;
-            } else {
+            }
+            else
+            {
                 gameState = GameState.gameWon;
             }
         }
@@ -276,11 +330,28 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     }
 
     private void PlayDungeonLevel(int dungeonLeveListIndex){
+        currentRoom = null;
 
-        bool dungeonBuiltSuccessful = DungeonBuilder.Instance.GenerateDungeon(dungeonLevelList[dungeonLeveListIndex]);
+        bool dungeonBuiltSuccessful =
+            DungeonBuilder.Instance.GenerateDungeon(
+                dungeonLevelList[dungeonLeveListIndex]);
 
-        if(!dungeonBuiltSuccessful){
-            Debug.LogError("Couldn't build dungeon from specified rooms and node graphs");
+        if (!dungeonBuiltSuccessful)
+        {
+            Debug.LogError(
+                "[GameManager] Dungeon generation failed. " +
+                "Gameplay initialization aborted.");
+            dungeonInitializationFailed = true;
+            return;
+        }
+
+        if (currentRoom == null)
+        {
+            Debug.LogError(
+                "[GameManager] Dungeon generation completed without " +
+                "a valid entrance room. Gameplay initialization aborted.");
+            dungeonInitializationFailed = true;
+            return;
         }
 
         StaticEventHandler.CallRoomChangedEvent(currentRoom);
@@ -290,7 +361,7 @@ public class GameManager : SingletonMonobehaviour<GameManager>
 
         player.gameObject.transform.position = HelperUtilities.GetSpawnPositionNearestToPlayer(Playerposition);
         // Chi sinh 3 ruong sung o level dau tien.
-        if (dungeonLeveListIndex == 0)
+        if (dungeonLeveListIndex == 0 || isSingleLevelRun)
         {
             StartingWeaponChestSpawner spawner =
                 GetComponent<StartingWeaponChestSpawner>();

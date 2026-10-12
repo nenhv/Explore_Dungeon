@@ -1083,10 +1083,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.18052255
+    x: 0.5130641
     y: 0
-    width: 0.6384797
-    height: 0.9993391
+    width: 0.3530219
+    height: 0.33267012
   near clip plane: 0.1
   far clip plane: 5000
   field of view: 40
@@ -7918,6 +7918,9 @@ MonoBehaviour:
   canvasGroup: {fileID: 2070543204}
   dungeonLevelList:
   - {fileID: 11400000, guid: efcd912fc42838b48be3dbfce1abd522, type: 2}
+  - {fileID: 11400000, guid: 4500060e3106fe540a7036910b581a96, type: 2}
+  - {fileID: 11400000, guid: 9ac11bcfbaf2d6f43bc7efece166598c, type: 2}
+  - {fileID: 11400000, guid: 03329250669dc464cb924147e88217f8, type: 2}
   currentDungeonLevelListIndex: 0
   gameState: 0
   previousGameState: 0

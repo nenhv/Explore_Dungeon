@@ -141,7 +141,16 @@ public class PlayerControl : MonoBehaviour
             // Tránh đi chéo nhanh hơn đi thẳng.
             direction = Vector2.ClampMagnitude(direction, 1f);
         }
-
+        
+        // Joystick dang duoc keo:
+        // cap nhat huong nhin theo huong di chuyen.
+        if (joystick != null &&
+            joystick.IsPressed &&
+            joystick.Direction.sqrMagnitude > 0.0001f)
+        {
+            lastMobileAimDirection =
+                joystick.Direction.normalized;
+        }
         // Ghi nho huong di chuyen de dung cho Roll.
         if (direction.sqrMagnitude > 0.0001f)
         {
@@ -306,20 +315,37 @@ public class PlayerControl : MonoBehaviour
                     (Vector3)lastMobileAimDirection * 100f;
             }
         }
-        // 2. Tren Android, khong ngam bang toa do cham.
+        
+        // 2. Neu dang keo joystick:
+        // uu tien nhin theo huong joystick.
+        else if (
+            MobileJoystick.Instance != null &&
+            MobileJoystick.Instance.IsPressed &&
+            MobileJoystick.Instance.Direction.sqrMagnitude > 0.0001f
+        )
+        {
+            aimTargetPosition =
+                transform.position +
+                (Vector3)lastMobileAimDirection * 100f;
+        }
+
+        // 3. Android: khi tha joystick,
+        // giu huong nhin cuoi cung.
         else if (Application.isMobilePlatform)
         {
             aimTargetPosition =
                 transform.position +
                 (Vector3)lastMobileAimDirection * 100f;
         }
-        // 3. Tren PC, giu nguyen co che ngam chuot.
+
+        // 4. PC: khi khong dung joystick,
+        // tiep tuc ngam theo con tro chuot.
         else
         {
             aimTargetPosition =
                 HelperUtilities.GetMouseWorldPosition();
         }
-
+        
         // 4. Tinh vector tu nong sung den muc tieu.
         weaponDirection =
             aimTargetPosition -
